@@ -8,6 +8,9 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+<!--
+mvn clean package exec:java -Dexec.args="src/main/resources/application.properties"
+-->
     <name>externalId</name>
     <description>Migrate ParticipantOptions table to the Account table</description>
 

@@ -30,6 +30,7 @@ public class ExternalIdApplication {
     private Connection connection;
     private AmazonDynamoDBClient client;
     private String ddbTable;
+    private int limit;
 
     public static void main(String[] args) throws Exception {
         LOGGER.info("Loading config from file: " + args[0]);
@@ -38,6 +39,8 @@ public class ExternalIdApplication {
         properties.load(new FileInputStream(args[0]));
 
         String ddbTable = properties.getProperty("ddb.table");
+        
+        int limit = Integer.parseInt(properties.getProperty("limit"));
 
         String url = properties.getProperty("mysql.url");
         String username = properties.getProperty("mysql.username");
@@ -49,19 +52,20 @@ public class ExternalIdApplication {
         String secretKey = properties.getProperty("aws.secret.key");
         AmazonDynamoDBClient client = Utils.establishDynamoDBConnection(key, secretKey);
 
-        new ExternalIdApplication(ddbTable, connection, client).run();
+        new ExternalIdApplication(ddbTable, connection, client, limit).run();
     }
 
-    public ExternalIdApplication(String ddbTable, Connection connection, AmazonDynamoDBClient client) {
+    public ExternalIdApplication(String ddbTable, Connection connection, AmazonDynamoDBClient client, int limit) {
         this.ddbTable = ddbTable;
         this.connection = connection;
         this.client = client;
+        this.limit = limit;
     }
 
     void run() throws Exception {
-        Map<String, String> userIds = collectAccountsToMigrate(100);
+        Map<String, String> userIds = collectAccountsToMigrate();
 
-        LOGGER.info("Found " + userIds.size() + " records (limit = 1000).");
+        LOGGER.info("Found " + userIds.size() + " records (limit = "+limit+").");
         for (Map.Entry<String, String> entry : userIds.entrySet()) {
             migrateAccount(entry);
             Thread.sleep(200);
@@ -93,7 +97,7 @@ public class ExternalIdApplication {
         }
     }
 
-    protected Map<String, String> collectAccountsToMigrate(int limit) throws SQLException {
+    protected Map<String, String> collectAccountsToMigrate() throws SQLException {
         Map<String, String> userIds = new HashMap<>();
         connection.setAutoCommit(true);
         try (Statement statement = connection.createStatement()) {
