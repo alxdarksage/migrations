@@ -14,12 +14,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Lists;
 
 public class Utils {
-    
-    public static Connection establishConnection(String url, String username, String password, boolean useSsl) throws SQLException {
+
+    public static Connection establishConnection(String url, String username, String password, boolean useSsl)
+            throws SQLException {
         String connectionString = getConnectionString(url, useSsl);
         return DriverManager.getConnection(connectionString, username, password);
     }
-    
+
     public static String getConnectionString(String url, boolean useSsl) {
         // This fixes a timezone bug in the MySQL Connector/J
         url = url + "?serverTimezone=UTC";
@@ -31,29 +32,29 @@ public class Utils {
         // Connect to DB
         return url;
     }
-    
+
     public static AmazonDynamoDBClient establishDynamoDBConnection(String key, String secretKey) {
         BasicAWSCredentials credentials = new BasicAWSCredentials(key, secretKey);
         return new AmazonDynamoDBClient(credentials);
     }
-        
+
     public static void optionsToAccountUpdateSQL(List<String> statements, String id, JsonNode node) throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("UPDATE Accounts SET ");
-        
+
         String extId = Utils.getString(node, "EXTERNAL_IDENTIFIER");
         if (extId != null) {
-            sb.append("externalId = '"+extId+"', ");
+            sb.append("externalId = '" + extId + "', ");
         }
         String scope = Utils.getString(node, "SHARING_SCOPE");
         if (scope != null) {
-            sb.append("sharingScope = '"+scope+"', ");
+            sb.append("sharingScope = '" + scope + "', ");
         }
         String zone = Utils.getString(node, "TIME_ZONE");
         if (zone != null) {
-            sb.append("timeZone = '"+zone+"', ");
+            sb.append("timeZone = '" + zone + "', ");
         }
-        boolean notifyByEmail = Utils.getBoolean(node, "EMAIL_NOTIFICATIONS", true); 
+        boolean notifyByEmail = Utils.getBoolean(node, "EMAIL_NOTIFICATIONS", true);
         sb.append("notifyByEmail = ");
         sb.append(notifyByEmail);
         sb.append(", ");
@@ -62,19 +63,21 @@ public class Utils {
         sb.append("';");
         statements.add(sb.toString());
     }
-    
+
     public static void optionsToLanguagesUpdateSQL(List<String> statements, String id, JsonNode node) {
         for (String language : Utils.getList(node, "LANGUAGES")) {
-            statements.add("INSERT INTO AccountLanguages (accountId, language) VALUES ('"+id+"','"+language+"');");    
+            statements.add(
+                    "INSERT INTO AccountLanguages (accountId, language) VALUES ('" + id + "','" + language + "');");
         }
     }
-    
+
     public static void optionsToDataGroupsUpdateSQL(List<String> statements, String id, JsonNode node) {
         for (String group : Utils.getList(node, "DATA_GROUPS")) {
-            statements.add("INSERT INTO AccountDataGroups (accountId, dataGroup) VALUES ('"+id+"','"+group+"');");    
+            statements
+                    .add("INSERT INTO AccountDataGroups (accountId, dataGroup) VALUES ('" + id + "','" + group + "');");
         }
     }
-    
+
     public static String getString(JsonNode node, String field) {
         JsonNode child = node.get(field);
         if (child != null && !child.isNull() && !StringUtils.isBlank(child.textValue())) {
@@ -93,7 +96,7 @@ public class Utils {
         }
         return "true".equals(child.textValue());
     }
-    
+
     public static List<String> getList(JsonNode node, String field) {
         JsonNode child = node.get(field);
         if (child != null && !child.isNull()) {
